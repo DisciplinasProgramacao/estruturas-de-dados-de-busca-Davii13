@@ -160,11 +160,73 @@ public class ABB<K, V> implements IMapeamento<K, V>{
      * @param chave a chave do item que deverá ser localizado e removido da árvore.
      * @return o valor associado ao item removido.
      */
-    public V remover(K chave) {
-    	
-    	// TODO
-    	return null;
+   public V remover(K chave)  {
+
+    if (chave == null) {
+        System.err.println("erro");
+        return null;
     }
+
+    V[] valorRemovido = (V[]) new Object[1];
+    raiz = removerRec(raiz, chave, valorRemovido);
+
+    if (valorRemovido[0] != null) {
+        tamanho--;
+    }
+
+    return valorRemovido[0];
+}
+
+private No<K,V> removerRec(No<K, V> no, K chave, V[] valorRemovido){
+
+    if (no == null) {
+        return null;
+    }
+
+    int cmp = comparador.compare(chave, no.getChave());
+
+    if (cmp < 0) {
+        no.setEsquerda(removerRec(no.getEsquerda(), chave, valorRemovido));
+    }
+    else if (cmp > 0) {
+        no.setDireita(removerRec(no.getDireita(), chave, valorRemovido));
+    }
+    else {
+        
+        valorRemovido[0] = no.getItem();
+
+        if (no.getEsquerda() == null && no.getDireita() == null) {
+            return null;
+        }
+
+        
+        if (no.getDireita() == null) {
+            return no.getEsquerda();
+        }
+
+      
+        if (no.getEsquerda() == null) {
+            return no.getDireita();
+        }
+
+       
+        No<K,V> sucessor = menor(no.getDireita());
+        no.setChave(sucessor.getChave());
+        no.setItem(sucessor.getItem());
+
+        no.setDireita(removerRec(no.getDireita(), sucessor.getChave(), (V[])new Object[1]));
+    }
+
+    return no;
+}
+
+private No<K,V> menor(No<K,V> no) {
+    while (no.getEsquerda() != null) {
+        no = no.getEsquerda();
+    }
+    return no;
+}
+
 
 	@Override
 	public int tamanho() {
