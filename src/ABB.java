@@ -134,9 +134,24 @@ public class ABB<K, V> implements IMapeamento<K, V>{
      */
     public int inserir(K chave, V item) {
     	
-    	// TODO
+    	if (chave== null){
+			return 0;
+		}
+		raiz=inserirRec(raiz,chave,item);
         return tamanho;
     }
+	private No inserirRec(No<K,V> atual,K chave, V item){
+		if (atual==null){return new No<>(chave,item);}
+		int cmp= comparador.compare(chave, atual.getChave());
+		if(cmp<0){
+			atual.setEsquerda(inserirRec(atual.getEsquerda(), chave, item));
+		}
+		else if(cmp>0){
+			atual.setDireita(inserirRec(atual.getDireita(), chave, item));
+		}
+		else{ atual.setItem(item);}
+		return atual;
+	}
 
     @Override 
     public String toString(){
@@ -148,11 +163,20 @@ public class ABB<K, V> implements IMapeamento<K, V>{
     	return caminhamentoEmOrdem();
     }
 
-    public String caminhamentoEmOrdem() {
-    	
-    	// TODO
-    	return null;
+      public String caminhamentoEmOrdem() {
+        StringBuilder sb = new StringBuilder();
+        emOrdem(raiz, sb);
+        return sb.toString().trim();
     }
+
+    private void emOrdem(No<K, V> atual, StringBuilder sb) {
+        if (atual == null) return;
+
+        emOrdem(atual.getEsquerda(), sb);
+        sb.append(atual.getChave()).append(" ");
+        emOrdem(atual.getDireita(), sb);
+    }
+
 
     @Override
     /**
