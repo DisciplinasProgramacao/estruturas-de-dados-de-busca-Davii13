@@ -129,19 +129,25 @@ public class App {
     
     /** Localiza um produto na árvore de produtos organizados por id, a partir do código de produto informado pelo usuário, e o retorna. 
      *  Em caso de não encontrar o produto, retorna null */
-    static Produto localizarProdutoID(ABB<Integer, Produto> produtosCadastrados) {
-        
-        // TODO
-    	return null;
-    }
+  public static Produto localizarProdutoID(ABB<Integer, Produto> produtosCadastrados) {
+    Scanner sc = new Scanner(System.in);
+    System.out.print("Digite o ID que deseja buscar: ");
+    int id = sc.nextInt();
+
+    return localizarProduto(produtosCadastrados, id);
+}
+
     
     /** Localiza um produto na árvore de produtos organizados por nome, a partir do nome de produto informado pelo usuário, e o retorna. 
      *  A busca não é sensível ao caso. Em caso de não encontrar o produto, retorna null */
-    static Produto localizarProdutoNome(ABB<String, Produto> produtosCadastrados) {
-        
-    	// TODO
-    	return null;
-    }
+  public static Produto localizarProdutoNome(ABB<String, Produto> produtosCadastrados) {
+    Scanner sc = new Scanner(System.in);
+    System.out.print("Digite o nome do produto que deseja buscar: ");
+    String nome = sc.nextLine();
+
+    return localizarProduto(produtosCadastrados, nome);
+}
+
     
     private static void mostrarProduto(Produto produto) {
     	
