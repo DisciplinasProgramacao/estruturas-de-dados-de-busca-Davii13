@@ -42,7 +42,7 @@ public class App {
         System.out.println("=============================");
     }
    
-    static <T extends Number> T lerOpcao(String mensagem, Class<T> classe) {
+   static <T> T lerOpcao(String mensagem, Class<T> classe) {
         
     	T valor;
         
@@ -89,7 +89,7 @@ public class App {
     	int numProdutos;
     	String linha;
     	Produto produto;
-    	ABB<K, Produto> produtosCadastrados;
+    	AVL<K, Produto> produtosCadastrados;
     	K chave;
     	
     	try {
@@ -197,15 +197,52 @@ public class App {
          return localizado;
     }
     
-    private static void recortarProdutosNome(ABB<String, Produto> produtosCadastrados) {
-     	
-         // TODO
-     }
-     
-    private static void recortarProdutosId(ABB<Integer, Produto> produtosCadastrados) {
-     	
-        // TODO
+   private static void recortarProdutosNome(ABB<String, Produto> produtosCadastrados) {
+        executarRecorte(
+            produtosCadastrados, 
+            String.class, 
+            "Digite a descrição inicial (ex: Cadeira): ", 
+            "Digite a descrição final (ex: Mesa): "
+        );
     }
+     
+  private static void recortarProdutosId(ABB<Integer, Produto> produtosCadastrados) {
+        executarRecorte(
+            produtosCadastrados, 
+            Integer.class, 
+            "Digite o ID inicial: ", 
+            "Digite o ID final: "
+        );
+    }
+    /**
+     * Método genérico para realizar a operação de recorte em qualquer árvore (Task 4)
+     * @param arvore A árvore onde será feito o recorte
+     * @param classeChave A classe do tipo da chave (String.class ou Integer.class)
+     * @param msgInicio Mensagem para pedir o valor inicial
+     * @param msgFim Mensagem para pedir o valor final
+     */
+    static <K> void executarRecorte(ABB<K, Produto> arvore, Class<K> classeChave, String msgInicio, String msgFim) {
+        if (arvore == null) {
+            System.out.println("A árvore não foi carregada ainda!");
+            return;
+        }
+
+        cabecalho();
+        System.out.println("=== Operação de Recorte ===");
+        
+        // Lê os dados usando o método utilitário que já existe na sua classe
+        K inicio = lerOpcao(msgInicio, classeChave);
+        K fim = lerOpcao(msgFim, classeChave);
+
+        // Chama o método recortar (que deve ter sido implementado na classe ABB na Tarefa 2)
+        Lista<Produto> resultado = arvore.recortar(inicio, fim);
+
+        System.out.println("\n--- Itens encontrados no intervalo ---");
+        // Assume que a classe Lista tem um método toString() implementado ou um método imprimir()
+        // Se a classe Lista tiver um método imprimir(), use: resultado.imprimir();
+        System.out.println(resultado); 
+    }
+    
     
 	public static void main(String[] args) {
 		teclado = new Scanner(System.in, Charset.forName("UTF-8"));
