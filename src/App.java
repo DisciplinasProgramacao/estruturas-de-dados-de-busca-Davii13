@@ -1,9 +1,13 @@
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.function.Function;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -183,36 +187,110 @@ public class App {
         return pedidos;
     }
     
-    private static void inserirNaTabela(Produto produto, Pedido pedido) {
-        
-    	Lista<Pedido> pedidosDoProduto;
-    	
-    	try {
-    		pedidosDoProduto = pedidosPorProduto.pesquisar(produto);
-    	} catch (NoSuchElementException excecao) {
-    		pedidosDoProduto = new Lista<>();
-    		pedidosPorProduto.inserir(produto, pedidosDoProduto);
-    	}
-    	pedidosDoProduto.inserirFinal(pedido);
+   private static void inserirNaTabela(Produto produto, Pedido pedido) {
+    // Obtém a lista de pedidos associada ao produto
+    Lista<Pedido> lista = pedidosPorProduto.pesquisar(produto);
+
+    // Se ainda não existe lista para esse produto, criar
+    if (lista == null) {
+        lista = new Lista<>();
+        pedidosPorProduto.inserir(produto, lista);
     }
+
+    // Inserir o pedido na lista
+    lista.inserirFinal(pedido);
+}
+
     
-    static void pedidosDoProduto() {
-    	
-    	Lista<Pedido> pedidosDoProduto;
-    	Produto produto = localizarProdutoID(produtosBalanceadosPorId);
-    	String nomeArquivo = "RelatorioProduto" + produto.hashCode() + ".txt";  
-    	
-        try {
-        	FileWriter arquivoRelatorio = new FileWriter(nomeArquivo, Charset.forName("UTF-8"));
-    		
-        	pedidosDoProduto = pedidosPorProduto.pesquisar(produto);
-        	arquivoRelatorio.append(pedidosDoProduto.toString() + "\n");
-            arquivoRelatorio.close();
-            System.out.println("Dados salvos em " + nomeArquivo);
-        } catch(IOException excecao) {
-            System.out.println("Problemas para criar o arquivo " + nomeArquivo + ". Tente novamente");        	
-        }
+    
+static void pedidosDoProduto() {
+    Produto produto = localizarProdutoID(produtosBalanceadosPorId);
+    if (produto == null) {
+        System.out.println("Produto não encontrado.");
+        return;
     }
+
+    Lista<Pedido> pedidosDoProduto = null;
+    try {
+        pedidosDoProduto = pedidosPorProduto.pesquisar(produto);
+    } catch (Exception e) {
+        // dependendo da implementação de TabelaHash, pesquisar pode lançar exceção
+        pedidosDoProduto = null;
+    }
+
+    if (pedidosDoProduto == null) {
+        System.out.println("Esse produto não possui pedidos.");
+        return;
+    }
+
+    // tenta descobrir um nome legível para o arquivo
+    String nomeBase = produto.toString().replaceAll("[^a-zA-Z0-9_\\-]", "_");
+    String nomeArquivo = "RelatorioProduto_" + nomeBase + ".txt";
+
+    // Gravação em UTF-8 usando Files.newBufferedWriter
+    try (BufferedWriter bw = Files.newBufferedWriter(
+            Path.of(nomeArquivo),
+            Charset.forName("UTF-8"),
+            StandardOpenOption.CREATE,
+            StandardOpenOption.TRUNCATE_EXISTING)) {
+
+        bw.write("RELATÓRIO DE PEDIDOS DO PRODUTO");
+        bw.newLine();
+        bw.write("Produto: " + produto.toString());
+        bw.newLine();
+        bw.write("Total de pedidos registrados nesta tabela: ");
+        // se Lista tiver getTamanho()
+        try {
+            bw.write(String.valueOf(pedidosDoProduto.getTamanho()));
+        } catch (Throwable t) {
+            // se não existir getTamanho(), apenas não escreve o total
+        }
+        bw.newLine();
+        bw.newLine();
+
+        // percorre a lista de pedidos: usa getPrimeiro() / getProximo() / getItem()
+        // esses nomes são comuns em implementações de lista de AEDs
+        try {
+            Celula<Pedido> atual = pedidosDoProduto.getPrimeiro();
+            int contador = 0;
+            while (atual != null) {
+                contador++;
+                Pedido p = atual.getItem();
+                bw.write("Pedido #" + contador);
+                bw.newLine();
+                // usa toString() do pedido para garantir compatibilidade
+                bw.write(p.toString());
+                bw.newLine();
+                bw.write("--------------------------------------------------");
+                bw.newLine();
+                atual = atual.getProximo();
+            }
+        } catch (NoSuchMethodError | NoSuchElementException | NullPointerException e) {
+            // Caso a Lista tenha outra API (por exemplo pegar por índice), tenta alternativa:
+            try {
+                int tamanho = pedidosDoProduto.getTamanho();
+                for (int i = 0; i < tamanho; i++) {
+                    Pedido p = pedidosDoProduto.pegar(i); // se existir pegar(index)
+                    bw.write("Pedido #" + (i+1));
+                    bw.newLine();
+                    bw.write(p.toString());
+                    bw.newLine();
+                    bw.write("--------------------------------------------------");
+                    bw.newLine();
+                }
+            } catch (Throwable t) {
+                // fallback: escreve mensagem indicando que não foi possível iterar
+                bw.write("Não foi possível iterar os pedidos: " + t.getMessage());
+                bw.newLine();
+            }
+        }
+
+        System.out.println("Relatório gerado com sucesso em: " + nomeArquivo);
+
+    } catch (IOException e) {
+        System.out.println("Erro ao criar/grav ar o arquivo: " + e.getMessage());
+    }
+}
     
 	public static void main(String[] args) {
 		teclado = new Scanner(System.in, Charset.forName("UTF-8"));
